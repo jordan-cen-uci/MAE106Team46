@@ -6,7 +6,7 @@ function impulse_response = load_impulse_response(robot, simulation)
     impulse_response.data = [.15 .25 .40 .9  1.4  2.8 NaN; ...
                              .14 .26 .41 .67 1.42 2.9 5.1];
                                 
-    impulse_response.scale = 1.5; % [EXPERIMENT] use to calibrate your max speed
+    impulse_response.scale = 1; % [EXPERIMENT] use to calibrate your max speed
     impulse_response.decay = @(n) max(0,polyval([-.00025 -.0038 1.0103],n)); % [EXPERIMENT] This equates how much less movement your robot gets with each actuation of the piston. This happens due to the reduced pressure in the tire.
     
     % calculate the average impulse response based on your data
