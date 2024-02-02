@@ -19,6 +19,6 @@ for n = 2:length(sim.time)
 end
 
 % plot results and animation
-plot_animation(sim);
-plot_performance(sim);
-plot_impulse_response(sim);
+%plot_animation(sim);
+%plot_performance(sim);
+%plot_impulse_response(sim);
