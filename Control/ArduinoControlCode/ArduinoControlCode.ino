@@ -57,8 +57,10 @@ function for correction steering
   if robot is not headed toward the target (some range of values to be considered the middle)
     if robot is too far right
       adjust left
-    else
+    if robot is too far left
       adjust right
+    else
+      stay straight
   may have to consider a right triangle of the robot angle from the target being theta and the adjacent side to calculate the opposite side (POV distance from target) to judge if it is straight enough, however angle could be enough
 */
 
