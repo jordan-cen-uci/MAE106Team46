@@ -40,4 +40,6 @@ set(gca, 'XTick',XTick);
 set(gca, 'XTickLabel', XTickLabels);
 title('Feedback Testing');
 ylabel('Average Score Over 20 Runs');
+yticks([0 30 60 90 120 150]);
+set(gca, 'YLim', [0, 170])
 
