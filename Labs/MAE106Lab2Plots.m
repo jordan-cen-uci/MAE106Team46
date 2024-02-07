@@ -33,6 +33,10 @@ part2Type3Time = part2Type3.Var1(20: 110);
 part2Type3Input = part2Type3.Var2(20: 110);
 part2Type3Filter = part2Type3.Var4(20: 110);
 
+estFun = @(t) 1 - exp((-t+50)/3);
+estFunX = linspace(50, 70);
+estFunY = estFun(estFunX);
+
 
 
 figure(1);
@@ -89,9 +93,9 @@ ax5.YLim = [-0.2 1.2];
 figure(6);
 hold on;
 
-plot(part2Type3Time, part2Type3Input, part2Type3Time, part2Type3Filter);
+plot(part2Type3Time, part2Type3Input, part2Type3Time, part2Type3Filter, estFunX, estFunY);
 title("Digital Low Pass Filter, Case 3: Filter 70% Duty Cycle");
-legend('Input Signal', 'Filtered Signal');
+legend('Input Signal', 'Filtered Signal', 'Estimated Function: V_i_n (1 - e^-^t^/^3)');
 xlabel('Time (ms)');
 ylabel('Signal Percentage (%)');
 ax6 = gca;
