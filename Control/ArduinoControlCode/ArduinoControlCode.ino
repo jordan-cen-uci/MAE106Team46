@@ -19,7 +19,7 @@ void loop() {
 }
 
 /*
-function for estimating distance traveled
+function for estimating distance traveled (impulse response)
   will take inputs as:
     -theta (servo direction relative to robot)
     -phi (robot direction)
@@ -71,7 +71,8 @@ function for data sampling
   - switch
   - servo motor
   - piston (maybe not?)
-
+  - time from arduino for every wheel turn
+  (go more indepth for impulse)
 */
 
 
