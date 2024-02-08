@@ -23,13 +23,16 @@ function for estimating distance traveled (impulse response)
   will take inputs as:
     -theta (servo direction relative to robot)
     -phi (robot direction)
-    -previous positions
-    -previous angle??
     -time
+    -index counter
   will ouput:
     -current position
     -current angle
-    as a struct or some array in order to return both values
+  Notes:
+  pass in struct or array of sampled data
+  as a struct or some array in order to return both values
+  take the circumference (or portion of circumference) divide by the current time - previous time to get impulse
+  use the set loop frequency's time to predict the distance covered by the robot in that time
 */
 
 /*
@@ -38,8 +41,6 @@ function to actuate the piston for one cycle
   delay for 200 ms
   retract piston
   delay for 500 ms
-
-concerns: subject to change since retraction relies on the spring which cannot be controlled and will always be pulling the piston back
 */
 
 /*
@@ -61,7 +62,9 @@ function for correction steering
       adjust right
     else
       stay straight
-  may have to consider a right triangle of the robot angle from the target being theta and the adjacent side to calculate the opposite side (POV distance from target) to judge if it is straight enough, however angle could be enough
+  may have to consider a right triangle of the robot angle from the target being 
+  theta and the adjacent side to calculate the opposite side (POV distance from target) 
+  to judge if it is straight enough, however angle could be enough
 */
 
 /*
@@ -72,7 +75,8 @@ function for data sampling
   - servo motor
   - piston (maybe not?)
   - time from arduino for every wheel turn
-  (go more indepth for impulse)
+  To calculate the impulse response we need to see how far and fast the robot goes after one piston fire. 
+  The switch is activated every wheel turn and each each time the switch is on the time will be taken
 */
 
 
@@ -80,8 +84,7 @@ function for data sampling
 
 /*
 Q/A
-1) where do i set the sampling rate
-2) how important is knwoing impulse response
+
 3) how to seperate piston activation and steering
 4) what would the code look like for data sampling and implementing the gain correction
 */

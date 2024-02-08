@@ -4,11 +4,8 @@ function control_variables = load_control_parameters()
     
     % Keep track of piston state, time it was last changed and for how long
     % the piston should be be on and off
-<<<<<<< HEAD
+
     control_variables.piston_time_on = 0.2; % (seconds) [SELECT] Period the piston is on
-=======
-    control_variables.piston_time_on = 0.3; % (seconds) [SELECT] Period the piston is on
->>>>>>> c28d227860bc386b8fb8718d40a013ffb1c499c1
     control_variables.piston_time_off = 0.5; % (seconds) [SELECT] Period the piston is off
     control_variables.piston_state = 0; % current piston state
     control_variables.piston_time_changed = -Inf; % last time we changed the piston state
@@ -54,25 +51,16 @@ function control_variables = load_control_parameters()
     control_variables.c1_state = 0; % saves the current control state (approaching channel, turning, or in the channel)
     
     % Variables for hybrid control
-<<<<<<< HEAD
     control_variables.c2_n_ticks_before_turn = 12; %[SELECT] number of ticks before start turning
     control_variables.c2_total_time_turning = 0.5; %[SELECT] seconds while robot will be turning at max rate
     control_variables.c2_Kp = 0.8; % [SELECT] causes the robot to point toward the channel
-=======
-    control_variables.c2_n_ticks_before_turn = 35; %[SELECT] number of ticks before start turning
-    control_variables.c2_total_time_turning = 0.6; %[SELECT] seconds while robot will be turning at max rate
-    control_variables.c2_Kp = 0.7; % [SELECT] causes the robot to point toward the channel
->>>>>>> c28d227860bc386b8fb8718d40a013ffb1c499c1
     control_variables.c2_n_ticks = 0; % count number of ticks
     control_variables.c2_time_started_turning = 0; % saves when the robot started turning
     control_variables.c2_state = 0; % saves the current control state (approaching channel, turning, or in the channel)
     
     % Define variables to control the targets in the course
-<<<<<<< HEAD
+
     control_variables.c3_Kp = 0.8; % [SELECT] causes the robot to point toward the target
-=======
-    control_variables.c3_Kp = 0.7; % [SELECT] causes the robot to point toward the target
->>>>>>> c28d227860bc386b8fb8718d40a013ffb1c499c1
     control_variables.c3_servo_angle_max = 40 * pi/180; % [MEASURE] Max angle (+/- from straight) you want to send the servo motor to
     control_variables.c3_change_target_distance = 12; % (inches) [SELECT] minimum distance from current target to go to next target
     control_variables.c3_position_desired_list = control_variables.grid_size*[-1.5 0;
