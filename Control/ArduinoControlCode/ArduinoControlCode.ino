@@ -1,10 +1,148 @@
+#include <Servo.h>
+#include <Wire.h>
+
+#include <LIS3MDL.h>
+#include <LSM6.h>
+
+LIS3MDL mag;
+LSM6 imu;
+
+LIS3MDL::vector<int16_t> m_min = { -4960,  +1959,  -5915};
+LIS3MDL::vector<int16_t> m_max = {-2644,  +4165,  -3989};
+
+Servo myservo;
+
+int servoPin = 3;       // Pin that the servomotor is connected to
+int solenoidPin = 2;    // Pin that the mosfet is conected to
+int switchPin = 4;      // Pin that the switch is conected to
+int pos = 0;            // variable to store the servo position
+int switchState;        // variable that stores the Reed switch state
+int servoDir = 0;       // variable that stores the direction the motor is turning in the demo program
+int solenoidState = LOW;  // variable that stores if solenoid is on or off         
+unsigned long previousMillis = 0;        // will store last time solenoid was updated
+const long interval = 1000;           // interval at which to turn solenoid on and off (milliseconds)
+
 void setup() {
-  // put your setup code here, to run once:
+  myservo.attach(servoPin);               // attaches the servo on pin 9 to the servo object
+  pinMode(solenoidPin, OUTPUT);           //Sets the pin as an output
+  pinMode(switchPin, INPUT_PULLUP);       //Sets the pin as an input_pullup
+  Serial.begin(9600);                     // starts serial communication @ 9600 bps
+  Wire.begin();
+
+  if (!mag.init())
+  {
+    Serial.println("Failed to detect and initialize LIS3MDL magnetometer!");
+    while (1);
+  }
+  mag.enableDefault();
+
+  if (!imu.init())
+  {
+    Serial.println("Failed to detect and initialize LSM6 IMU!");
+    while (1);
+  }
+  imu.enableDefault();
+
+
+
 
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  ////////////// SERVOMOTOR ///////////////////////////////////////////////////
+
+  if(servoDir == 0)
+  {
+    pos++;
+    if(pos >= 180)
+    {
+      servoDir = 1;
+    }
+  }
+  else
+  {
+    pos--;
+    if(pos <= 0)
+    {
+      servoDir = 0;
+    }
+  }
+
+  myservo.write(pos);              // tell servo to go to position in variable 'pos'
+  delay(10); 
+
+////////////// MAGNETOMETER ///////////////////////////////////////////////////
+
+  mag.read();
+  imu.read();
+
+  float heading = computeHeading();
+
+
+////////////// SOLENOID VALVE ///////////////////////////////////////////////////
+unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    if (solenoidState == LOW) {
+      solenoidState = HIGH;
+    } else {
+      solenoidState = LOW;
+    }
+    digitalWrite(solenoidPin, solenoidState);    //Switch Solenoid ON/oFF
+  }
+
+////////////// REED SWITCH ///////////////////////////////////////////////////
+  switchState = digitalRead(switchPin);
+
+////////////// Serial Print  ///////////////////////////////////////////////////
+  Serial.print("Reed Switch: ");
+  Serial.print(switchState);
+  Serial.print("   Magnetometer: ");
+  Serial.println(heading);
+
+  //delay(100);
+}
+
+
+
+
+//heading function for magnetometer
+
+template <typename T> float computeHeading(LIS3MDL::vector<T> from)
+{
+  LIS3MDL::vector<int32_t> temp_m = {mag.m.x, mag.m.y, mag.m.z}; //creates vector for magnotometer readings
+
+  // copy acceleration readings from LSM6::vector into an LIS3MDL::vector
+  LIS3MDL::vector<int16_t> a = {imu.a.x, imu.a.y, imu.a.z};
+
+  // subtract offset (average of min and max) from magnetometer readings
+  temp_m.x -= ((int32_t)m_min.x + m_max.x) / 2;
+  temp_m.y -= ((int32_t)m_min.y + m_max.y) / 2;
+  temp_m.z -= ((int32_t)m_min.z + m_max.z) / 2;
+
+  // compute E and N
+  LIS3MDL::vector<float> E; // declares vector E
+  LIS3MDL::vector<float> N; // declares vector N
+  LIS3MDL::vector_cross(&temp_m, &a, &E); // goes into address of mag vector and acceleration vector and inserts into address of E
+  LIS3MDL::vector_normalize(&E); 
+  LIS3MDL::vector_cross(&a, &E, &N); // goes into address of a vector and E vector and inserts into address of N
+  LIS3MDL::vector_normalize(&N);
+
+  // compute heading
+  float heading = atan2(LIS3MDL::vector_dot(&E, &from), LIS3MDL::vector_dot(&N, &from)) * 180 / PI;
+  if (heading < 0) heading += 360; // keeps values in range of 0 to 360
+  return heading;
+}
+
+/*
+Returns the angular difference in the horizontal plane between a
+default vector (the +X axis) and north, in degrees.
+*/
+float computeHeading()
+{
+  return computeHeading((LIS3MDL::vector<int>){1, 0, 0});
+}
 
   /*
   get the current data
