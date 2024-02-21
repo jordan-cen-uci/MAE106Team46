@@ -1,6 +1,5 @@
 #include <Servo.h>
 #include <Wire.h>
-
 #include <LIS3MDL.h>
 #include <LSM6.h>
 
@@ -21,6 +20,7 @@ int servoDir = 0;       // variable that stores the direction the motor is turni
 int solenoidState = LOW;  // variable that stores if solenoid is on or off         
 unsigned long previousMillis = 0;        // will store last time solenoid was updated
 const long interval = 1000;           // interval at which to turn solenoid on and off (milliseconds)
+LIS3MDL::vector<float> times;
 
 void setup() {
   myservo.attach(servoPin);               // attaches the servo on pin 9 to the servo object
@@ -43,7 +43,9 @@ void setup() {
   }
   imu.enableDefault();
 
+// actuate solenoid once
 
+digitalWrite(solenoidPin, solenoidState);
 
 
 }
@@ -154,7 +156,6 @@ float computeHeading()
   estimate position
   */
 
-}
 
 /*
 function for estimating distance traveled (impulse response)
@@ -180,6 +181,18 @@ function to actuate the piston for one cycle
   retract piston
   delay for 500 ms
 */
+
+void getImpulse() {
+
+  int prevflow;
+  int flow = digitalRead(switchPin);
+  if (prevflow != flow) { 
+    if (flow == 1){
+      times.push_back(millis());
+    }
+  }
+  prevflow = flow;
+}
 
 /*
 function for initial steer (maybe only activate once)

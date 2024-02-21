@@ -22,6 +22,6 @@ figure(1);
 hold on;
 plot(xInput, magnet1, xInput, filteredMagnet1, xInput, magnet2, xInput, filteredMagnet2);
 title("Comparing Signal Change from Solenoid");
-legend('Close to Solenoid Unfiltered', 'Close to Solenoid Filtered', 'Far from Solenoid Unfiltered', 'Far from Solenoid Filtered');
+legend('Close to Solenoid Unfiltered', 'Close to Solenoid Filtered', 'Far from Solenoid Unfiltered', 'Far from Solenoid Filtered', 'Location','southeast');
 xlabel('Time (s)');
 ylabel('Heading of Magnotometer');
