@@ -45,13 +45,17 @@ void setup() {
 
 // actuate solenoid once
 
-digitalWrite(solenoidPin, solenoidState);
+digitalWrite(solenoidPin, HIGH);
 
 
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  //Call impulse data printing function
+  getImpulse();
+
+
   ////////////// SERVOMOTOR ///////////////////////////////////////////////////
 
   if(servoDir == 0)
@@ -188,7 +192,7 @@ void getImpulse() {
   int flow = digitalRead(switchPin);
   if (prevflow != flow) { 
     if (flow == 1){
-      times.push_back(millis());
+      Serial.println(millis());
     }
   }
   prevflow = flow;
