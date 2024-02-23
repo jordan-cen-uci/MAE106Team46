@@ -20,8 +20,11 @@ end
 
 figure(1);
 hold on;
-plot(xInput, magnet1, xInput, filteredMagnet1, xInput, magnet2, xInput, filteredMagnet2);
-title("Comparing Signal Change from Solenoid");
-legend('Close to Solenoid Unfiltered', 'Close to Solenoid Filtered', 'Far from Solenoid Unfiltered', 'Far from Solenoid Filtered', 'Location','southeast');
+plot(xInput, magnet1,'r-');
+plot(xInput, filteredMagnet1, 'b-');
+plot(xInput, magnet2, "Color", [0.9290 0.6940 0.1250]);
+plot(xInput, filteredMagnet2, '-', "Color", "green");
+title("Comparing Effects of Distance to Solenoid and Filteration on Magnotometer Reading");
+legend('Close to Solenoid; Unfiltered', 'Close to Solenoid; Filtered \gamma = 0.95', 'Far from Solenoid; Unfiltered', 'Far from Solenoid; Filtered \gamma = 0.95', 'Location','southeast');
 xlabel('Time (s)');
-ylabel('Heading of Magnotometer');
+ylabel('Heading of Magnotometer (Degrees)');
