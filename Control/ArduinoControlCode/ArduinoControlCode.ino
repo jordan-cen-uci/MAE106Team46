@@ -188,14 +188,14 @@ function to actuate the piston for one cycle
 
 void getImpulse() {
 
-  int prevflow;
+  int prevflow; //declare a variable to track previous flow
   int flow = digitalRead(switchPin);
-  if (prevflow != flow) { 
+  if (prevflow != flow) {  //helps to ensure that the button only captures the first millisecond that the switch is flicked
     if (flow == 1){
-      Serial.println(millis());
+      Serial.println(millis()); //prints out the data of time into serial port
     }
   }
-  prevflow = flow;
+  prevflow = flow; //resets the previous flow number to what it is now for the next iteration
 }
 
 /*
