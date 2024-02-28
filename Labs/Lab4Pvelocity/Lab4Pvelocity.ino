@@ -13,10 +13,10 @@
 //-----------------Experimental Parameters (Change These)--------------------
 //---------------------------------------------------------------------------
 
-float Kp = 1; // proportional controller gain
-boolean constantVelocity = true; // true or false
+float Kp = 4; // proportional controller gain
+boolean constantVelocity = false; // true or false
 float desVel_amplitude = 60; // magnitude of constant desVel or amplitude of sinusoidal desVel
-float desVel_frequency = 1;
+float desVel_frequency = 40;
 
 //---------------------------------------------------------------------------
 //-------------Initialize variable names (Don't Change These)----------------
