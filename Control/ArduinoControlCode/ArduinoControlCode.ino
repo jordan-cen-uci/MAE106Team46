@@ -20,14 +20,17 @@ int servoDir = 0;       // variable that stores the direction the motor is turni
 int solenoidState = LOW;  // variable that stores if solenoid is on or off         
 unsigned long previousMillis = 0;        // will store last time solenoid was updated
 const long interval = 1000;           // interval at which to turn solenoid on and off (milliseconds)
-float dist = 0;
 LIS3MDL::vector<float> times;
 
+float dist = 0;
 int startingPosition = 1;
 float distanceStartTurning; //point at which robot is ready to start turning, determined based on position
 bool turnReady = false; //bool to determine if the robot is in position to turn
 bool lookingDownTrench = false; //bool to determine if robot is looking in the correct direction
 float headingDownTrench = ; //heading for wanting to go down the trench
+float desiredHeading = ;
+float currentHeading;
+float maxTurning = ; //value associated with robot's maximum turning radius
 
 
 void setup() {
@@ -65,16 +68,34 @@ void loop() {
   //Call impulse data printing function
   getImpulse();
 
+  mag.read(); //reads magnotometer
+  imu.read();
+
   startingParam(startingPosition);
 
-  if (dist >= )
 
-  if (turnReady) {
-    
+  if (dist >= distanceStartTurning) { //tells the robot to go forward and once it has covered its starting position distance it will activate the initial turn
+    turnReady = true;
+  }
+
+  if (turnReady) { // tells robot to turn at max distance depending on if the current heading is less than or greater than the
+    currentHeading = computeHeading();
+    if (currentHeading < desiredHeading) {
+      myservo.write(maxTurning);
+    }
+    else {
+      myservo.write(maxTurning);
+    }
+
+    if(currentHeading - desiredHeading < 0.05) {
+      myservo.write(0);
+      turnReady = false;
+      lookingDownTrench = true;
+    }
   }
 
   if(lookingDownTrench) {
-
+    
   }
 
 
@@ -218,7 +239,7 @@ void getImpulse() {
   int flow = digitalRead(switchPin);
   if (prevflow != flow) {  //helps to ensure that the button only captures the first millisecond that the switch is flicked
     if (flow == 1){
-      dist = dist + (3.14 * 2.75); //calculates distance in inches
+      dist = dist + (3.14 * 2.75 / 5); //calculates distance in inches
       Serial.print(millis()); //prints out the data of time into serial 
       Serial.print("\t");
       Serial.println(dist); //prints out distance right after before going to new line
