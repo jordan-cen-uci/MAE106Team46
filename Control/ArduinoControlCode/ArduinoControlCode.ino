@@ -20,6 +20,7 @@ int servoDir = 0;       // variable that stores the direction the motor is turni
 int solenoidState = LOW;  // variable that stores if solenoid is on or off         
 unsigned long previousMillis = 0;        // will store last time solenoid was updated
 const long interval = 1000;           // interval at which to turn solenoid on and off (milliseconds)
+float dist = 0;
 LIS3MDL::vector<float> times;
 
 void setup() {
@@ -87,16 +88,8 @@ void loop() {
 
 
 ////////////// SOLENOID VALVE ///////////////////////////////////////////////////
-unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-    previousMillis = currentMillis;
-    if (solenoidState == LOW) {
-      solenoidState = HIGH;
-    } else {
-      solenoidState = LOW;
-    }
-    digitalWrite(solenoidPin, solenoidState);    //Switch Solenoid ON/oFF
-  }
+
+actuatePiston();
 
 ////////////// REED SWITCH ///////////////////////////////////////////////////
   switchState = digitalRead(switchPin);
@@ -185,6 +178,18 @@ function to actuate the piston for one cycle
   retract piston
   delay for 500 ms
 */
+void actuatePiston() {
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+    if (solenoidState == LOW) {
+      solenoidState = HIGH;
+    } else {
+      solenoidState = LOW;
+    }
+    digitalWrite(solenoidPin, solenoidState);    //Switch Solenoid ON/oFF
+  }
+}
 
 void getImpulse() {
 
@@ -192,10 +197,13 @@ void getImpulse() {
   int flow = digitalRead(switchPin);
   if (prevflow != flow) {  //helps to ensure that the button only captures the first millisecond that the switch is flicked
     if (flow == 1){
-      Serial.println(millis()); //prints out the data of time into serial port
+      dist = dist + (3.14 * 2.75); //calculates distance in inches
+      Serial.print(millis()); //prints out the data of time into serial 
+      Serial.print("\t");
+      Serial.println(dist); //prints out distance right after before going to new line
     }
   }
-  prevflow = flow; //resets the previous flow number to what it is now for the next iteration
+  prevflow = flow; //resets the previous flow number to what it is now so that there are no repeats for the same switch flick
 }
 
 /*
