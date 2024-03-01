@@ -23,6 +23,13 @@ const long interval = 1000;           // interval at which to turn solenoid on a
 float dist = 0;
 LIS3MDL::vector<float> times;
 
+int startingPosition = 1;
+float distanceStartTurning; //point at which robot is ready to start turning, determined based on position
+bool turnReady = false; //bool to determine if the robot is in position to turn
+bool lookingDownTrench = false; //bool to determine if robot is looking in the correct direction
+float headingDownTrench = ; //heading for wanting to go down the trench
+
+
 void setup() {
   myservo.attach(servoPin);               // attaches the servo on pin 9 to the servo object
   pinMode(solenoidPin, OUTPUT);           //Sets the pin as an output
@@ -53,8 +60,22 @@ digitalWrite(solenoidPin, HIGH);
 
 void loop() {
   // put your main code here, to run repeatedly:
+
+  actuatePiston();
   //Call impulse data printing function
   getImpulse();
+
+  startingParam(startingPosition);
+
+  if (dist >= )
+
+  if (turnReady) {
+    
+  }
+
+  if(lookingDownTrench) {
+
+  }
 
 
   ////////////// SERVOMOTOR ///////////////////////////////////////////////////
@@ -206,6 +227,28 @@ void getImpulse() {
   prevflow = flow; //resets the previous flow number to what it is now so that there are no repeats for the same switch flick
 }
 
+void startingParam(int startingPos) {
+  switch(startingPos) {
+    case 1:
+      distanceStartTurning = ;
+    case 2:
+      distanceStartTurning = ;
+    case 3:
+      distanceStartTurning = ;  
+    case 4:
+      distanceStartTurning = ;
+    case 5:
+      distanceStartTurning = ;
+    case 6:
+      distanceStartTurning = ;
+    case 7:
+      distanceStartTurning = ;
+    case 8:
+      distanceStartTurning = ;
+    default:
+      distanceStartTuring =;
+  }
+}
 /*
 function for initial steer (maybe only activate once)
   if target 1 (located outside the trench) is satisfied
