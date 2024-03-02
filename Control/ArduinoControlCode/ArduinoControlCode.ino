@@ -28,8 +28,8 @@ float distanceStartTurning; //point at which robot is ready to start turning, de
 bool turnReady = false; //bool to determine if the robot is in position to turn
 bool lookingDownTrench = false; //bool to determine if robot is looking in the correct direction
 float headingDownTrench = ; //heading for wanting to go down the trench
-float desiredHeading = ;
-float currentHeading;
+float desiredHeading = ; //heading down the trench
+float currentHeading; // heading updated every loop
 float maxTurning = ; //value associated with robot's maximum turning radius
 
 
@@ -73,12 +73,12 @@ void loop() {
 
   startingParam(startingPosition);
 
-
-  if (dist >= distanceStartTurning) { //tells the robot to go forward and once it has covered its starting position distance it will activate the initial turn
+//tells the robot to go forward and once it has covered its starting position distance it will activate the initial turn
+  if (dist >= distanceStartTurning) {
     turnReady = true;
   }
-
-  if (turnReady) { // tells robot to turn at max distance depending on if the current heading is less than or greater than the
+// tells robot to turn at max distance depending on if the current heading is less than or greater than the desired
+  if (turnReady) {
     currentHeading = computeHeading();
     if (currentHeading < desiredHeading) {
       myservo.write(maxTurning);
@@ -86,7 +86,7 @@ void loop() {
     else {
       myservo.write(maxTurning);
     }
-
+// when the robot is close enough to desired heading it moves to the next section
     if(currentHeading - desiredHeading < 0.05) {
       myservo.write(0);
       turnReady = false;
@@ -94,6 +94,7 @@ void loop() {
     }
   }
 
+//closed loop control law to keep the robot straight while going down the trench
   if(lookingDownTrench) {
     
   }
