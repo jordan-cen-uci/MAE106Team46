@@ -50,25 +50,19 @@ ylabel('Position (radians)');
 xticks([0 0.05 0.10 0.15 0.2]);
 
 part2UndampedFreq = [1;2;4;5;6;8;12;16];
-part2UndampedInput = [1;1;1;1;0.9995;0.999;1;1];
-part2UndampedOutput = [0.941;0.907;0.995;0.9075;0.812;0.494;0.3385;0.2235];
+part2UndampedOutput = [1;1;1;1;0.9995;0.999;1;1];
+part2UndampedInput = [0.941;0.907;0.995;0.9075;0.812;0.494;0.3385;0.2235];
 
-part2UndampedTrans = part2UndampedOutput./part2UndampedInput;
+part2UndampedTrans = part2UndampedInput./part2UndampedOutput;
 
 part2UndampedAmp = 20.*log10(part2UndampedTrans);
 
-part2UndampedPhase = [-36.288;-43.632;-43.632;-58.32;-78.624;-122.112;-121.824;-174.528];
+part2UndampedPhase = [-36.288;-43.632;];
 
 figure(4);
 clf;
-subplot(2,1,1);
-plot(part2UndampedFreq, part2UndampedAmp);
-grid on;
-subplot(2,1,2);
-plot(part2UndampedFreq, part2UndampedPhase);
+semilogx(part2UndampedFreq, part2UndampedAmp);
 hold on;
-grid on;
-
 
 part2DampedFreq = [1;2;4;5;6;8;12;16];
 part2DampedOutput = [1;1;0.9995;1;1;0.999;0.9995;1];
