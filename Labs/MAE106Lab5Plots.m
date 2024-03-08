@@ -67,21 +67,24 @@ semilogx(part2UndampedAngFreq, part2UndampedPhase);
 hold on;
 grid on;
 ax5 = gca;
-ax5.XLim = [0 pi.*16];
+ax5.XLim = [0; pi.*16];
 ax5.YLim = [-180 -20];
 ylabel('Phase Shift (degrees)');
 xlabel('Frequency (rad/s)');
 
 subplot(2,1,1);
-title('Undamped Bode Plot');
 semilogx(part2UndampedAngFreq, part2UndampedAmp);
 grid on;
 ax4 = gca;
-ax4.XLim = [0 pi.*16];
+ax4.XLim = [0; pi.*16];
 ax4.YLim = [-15 3];
 ylabel('Magnitude (dB)');
 
-title('Undamped Bode Plot');
+title('Undamped Sinusoid Bode Plot (Kd = 0)');
+set(ax5, 'XTick', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40]);
+set(ax5, 'XTickLabels', {'1','2','3','4','5','6','7','8','9','10^1', '2x10^1', '3x10^1', '4x10^1'});
+set(ax4, 'XTick', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40]);
+set(ax4, 'XTickLabels', {'1','2','3','4','5','6','7','8','9','10^1', '2x10^1', '3x10^1', '4x10^1'});
 
 part2DampedFreq = [1;2;4;5;6;8;12;16];
 part2DampedAngFreq = pi .* part2DampedFreq;
@@ -113,4 +116,8 @@ ax6 = gca;
 ax6.XLim = [0 pi.*16];
 ax6.YLim = [-15 3];
 ylabel('Magnitude (dB)');
-title('Critically Damped Bode Plot (Kd = 0.2)');
+title('Critically Damped Sinusoid Bode Plot (Kd = 0.2)');
+set(ax6, 'XTick', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40]);
+set(ax6, 'XTickLabels', {'1','2','3','4','5','6','7','8','9','10^1', '2x10^1', '3x10^1', '4x10^1'});
+set(ax7, 'XTick', [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40]);
+set(ax7, 'XTickLabels', {'1','2','3','4','5','6','7','8','9','10^1', '2x10^1', '3x10^1', '4x10^1'});
