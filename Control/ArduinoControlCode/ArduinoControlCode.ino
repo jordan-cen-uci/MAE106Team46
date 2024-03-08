@@ -6,8 +6,8 @@
 LIS3MDL mag;
 LSM6 imu;
 
-LIS3MDL::vector<int16_t> m_min = { -4960,  +1959,  -5915};
-LIS3MDL::vector<int16_t> m_max = {-2644,  +4165,  -3989};
+LIS3MDL::vector<int16_t> m_min = { -6366,	-2594,	1633};
+LIS3MDL::vector<int16_t> m_max = {-2597,	762,	2086};
 
 Servo myservo;
 
@@ -23,14 +23,20 @@ const long interval = 1000;           // interval at which to turn solenoid on a
 LIS3MDL::vector<float> times;
 
 float dist = 0;
-int startingPosition = 1;
+int startingPosition = 1; //front = 1; middle = 2; back = 3;
 float distanceStartTurning; //point at which robot is ready to start turning, determined based on position
 bool turnReady = false; //bool to determine if the robot is in position to turn
 bool lookingDownTrench = false; //bool to determine if robot is looking in the correct direction
-float headingDownTrench = ; //heading for wanting to go down the trench
-float desiredHeading = ; //heading down the trench
+float desiredHeading = 0; //heading down the trench
 float currentHeading; // heading updated every loop
-float maxTurning = ; //value associated with robot's maximum turning radius
+float maxTurning = 0; //value associated with robot's maximum turning radius
+float Kp = 1;
+float Kd = 1;
+float filterStrength = 0.9;
+float rawHeading;
+float input;
+float filteredSignal_previous = 0; 
+int prevflow = 0;
 
 
 void setup() {
@@ -70,6 +76,9 @@ void loop() {
 
   mag.read(); //reads magnotometer
   imu.read();
+  rawHeading = computeHeading();
+  currentHeading = averagingFilter(rawHeading, filterStrength);
+
 
   startingParam(startingPosition);
 
@@ -79,15 +88,14 @@ void loop() {
   }
 // tells robot to turn at max distance depending on if the current heading is less than or greater than the desired
   if (turnReady) {
-    currentHeading = computeHeading();
     if (currentHeading < desiredHeading) {
       myservo.write(maxTurning);
     }
     else {
-      myservo.write(maxTurning);
+      myservo.write(-maxTurning);
     }
 // when the robot is close enough to desired heading it moves to the next section
-    if(currentHeading - desiredHeading < 0.05) {
+    if(abs(currentHeading - desiredHeading) < 0.05) {
       myservo.write(0);
       turnReady = false;
       lookingDownTrench = true;
@@ -138,8 +146,8 @@ actuatePiston();
   switchState = digitalRead(switchPin);
 
 ////////////// Serial Print  ///////////////////////////////////////////////////
-  Serial.print("Reed Switch: ");
-  Serial.print(switchState);
+  //Serial.print("Reed Switch: ");
+  //Serial.print(switchState);
   Serial.print("   Magnetometer: ");
   Serial.println(heading);
 
@@ -226,7 +234,7 @@ void actuatePiston() {
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
     if (solenoidState == LOW) {
-      solenoidState = HIGH;
+      //solenoidState = HIGH;
     } else {
       solenoidState = LOW;
     }
@@ -235,11 +243,9 @@ void actuatePiston() {
 }
 
 void getImpulse() {
-
-  int prevflow; //declare a variable to track previous flow
   int flow = digitalRead(switchPin);
   if (prevflow != flow) {  //helps to ensure that the button only captures the first millisecond that the switch is flicked
-    if (flow == 1){
+    if (flow == 0){
       dist = dist + (3.14 * 2.75 / 5); //calculates distance in inches
       Serial.print(millis()); //prints out the data of time into serial 
       Serial.print("\t");
@@ -252,24 +258,21 @@ void getImpulse() {
 void startingParam(int startingPos) {
   switch(startingPos) {
     case 1:
-      distanceStartTurning = ;
+      distanceStartTurning = 0;
     case 2:
-      distanceStartTurning = ;
+      distanceStartTurning = 0;
     case 3:
-      distanceStartTurning = ;  
-    case 4:
-      distanceStartTurning = ;
-    case 5:
-      distanceStartTurning = ;
-    case 6:
-      distanceStartTurning = ;
-    case 7:
-      distanceStartTurning = ;
-    case 8:
-      distanceStartTurning = ;
+      distanceStartTurning = 0;
     default:
-      distanceStartTuring =;
+      distanceStartTurning = 0;
   }
+}
+
+float averagingFilter(float measuredSignal, float filterStrength){   
+  float filterOutput = (1-filterStrength)*measuredSignal + 
+    filterStrength*filteredSignal_previous;    
+  filteredSignal_previous = filterOutput;   
+  return filterOutput; 
 }
 /*
 function for initial steer (maybe only activate once)
