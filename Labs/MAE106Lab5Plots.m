@@ -31,7 +31,7 @@ plot(part1CriticalTime, part1CriticalPos,'b-', part1CriticalTime, part1CriticalD
 ax2 = gca;
 ax2.XLim = [0 0.2];
 ax2.YLim = [0 1.1];
-title('Underdamped Trial; Kp = 90, Kd = 0.2');
+title('Critically Damped Trial; Kp = 90, Kd = 0.2');
 legend('Actual Position', 'Desired Position','Location','southeast');
 xlabel('Time (s)');
 ylabel('Position (radians)');
@@ -43,7 +43,7 @@ plot(part1OverDampTime, part1OverDampPos,'b-', part1OverDampTime, part1OverDampD
 ax3 = gca;
 ax3.XLim = [0 0.2];
 ax3.YLim = [0 1.1];
-title('Underdamped Trial; Kp = 90, Kd = 4.5');
+title('Overdamped Trial; Kp = 90, Kd = 4.5');
 legend('Actual Position', 'Desired Position','Location','southeast');
 xlabel('Time (s)');
 ylabel('Position (radians)');
