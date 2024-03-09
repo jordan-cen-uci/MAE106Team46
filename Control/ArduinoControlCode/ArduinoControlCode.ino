@@ -23,20 +23,32 @@ const long interval = 1000;           // interval at which to turn solenoid on a
 LIS3MDL::vector<float> times;
 
 float dist = 0;
-int startingPosition = 1; //front = 1; middle = 2; back = 3;
 float distanceStartTurning; //point at which robot is ready to start turning, determined based on position
+bool starting = true;
 bool turnReady = false; //bool to determine if the robot is in position to turn
 bool lookingDownTrench = false; //bool to determine if robot is looking in the correct direction
-float desiredHeading = 0; //heading down the trench
+float desiredHeading = 339; //heading down the trench
 float currentHeading; // heading updated every loop
 float maxTurning = 0; //value associated with robot's maximum turning radius
+float maxTurningRadius = 0; //turning radius asscoaited with max turning input
+float desTurnDistance = 0; // distance needed to be associated with end of open loop turn
+float rawHeading;
+float input;
+float prevTime = 0;
+float filteredSignal_previous = 0; 
+int prevflow = 0;
+
+int startingPosition = 1; //front = 1; middle = 2; back = 3;
+bool leftOrRight = false; //left = false; right = true;
+
 float Kp = 1;
 float Kd = 1;
 float filterStrength = 0.9;
-float rawHeading;
-float input;
-float filteredSignal_previous = 0; 
-int prevflow = 0;
+
+
+float frontDistance = 7.875;
+float backDistance = 5.375;
+float betweenDistance  = 7;
 
 
 void setup() {
@@ -64,6 +76,10 @@ void setup() {
 
 digitalWrite(solenoidPin, HIGH);
 
+startingParam(startingPosition);
+
+findDesiredTurningDistance();
+
 
 }
 
@@ -83,8 +99,9 @@ void loop() {
   startingParam(startingPosition);
 
 //tells the robot to go forward and once it has covered its starting position distance it will activate the initial turn
-  if (dist >= distanceStartTurning) {
+  if (starting && dist >= distanceStartTurning) {
     turnReady = true;
+    starting = false;
   }
 // tells robot to turn at max distance depending on if the current heading is less than or greater than the desired
   if (turnReady) {
@@ -95,7 +112,7 @@ void loop() {
       myservo.write(-maxTurning);
     }
 // when the robot is close enough to desired heading it moves to the next section
-    if(abs(currentHeading - desiredHeading) < 0.05) {
+    if(dist >= desTurnDistance) {
       myservo.write(0);
       turnReady = false;
       lookingDownTrench = true;
@@ -104,9 +121,21 @@ void loop() {
 
 //closed loop control law to keep the robot straight while going down the trench
   if(lookingDownTrench) {
-    
+    input = -Kp * (desiredHeading - currentHeading) + Kd * (desiredHeading - currentHeading) / (millis() - prevTime);
+    if (input > -maxTurning && input < maxTurning) {
+      myservo.write(input);
+    }
+    else if (input > maxTurning) {
+      myservo.write(maxTurning);
+    }
+    else if (input < -maxTurning) {
+      myservo.write(-maxTurning);
+    }
   }
 
+
+
+  prevTime = millis();
 
   ////////////// SERVOMOTOR ///////////////////////////////////////////////////
 
@@ -273,6 +302,16 @@ float averagingFilter(float measuredSignal, float filterStrength){
     filterStrength*filteredSignal_previous;    
   filteredSignal_previous = filterOutput;   
   return filterOutput; 
+}
+
+void findDesiredTurningDistance() {
+  desTurnDistance = distanceStartTurning;
+  if (leftOrRight) {
+    desTurnDistance = desTurnDistance + ((3.14/2)*sqrt(pow(betweenDistance, 2) + pow(maxTurningRadius + (frontDistance/2), 2)));
+  }
+  else {
+    desTurnDistance = desTurnDistance + ((3.14/2)*sqrt(pow(betweenDistance, 2) + pow(maxTurningRadius - (frontDistance/2), 2)));
+  }
 }
 /*
 function for initial steer (maybe only activate once)
