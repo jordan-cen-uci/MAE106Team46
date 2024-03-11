@@ -23,14 +23,14 @@ const long interval = 1000;           // interval at which to turn solenoid on a
 LIS3MDL::vector<float> times;
 
 float dist = 0;
-float distanceStartTurning; //point at which robot is ready to start turning, determined based on position
+float distanceStartTurning = 0; //point at which robot is ready to start turning, determined based on position
 bool starting = true;
 bool turnReady = false; //bool to determine if the robot is in position to turn
 bool lookingDownTrench = false; //bool to determine if robot is looking in the correct direction
 float desiredHeading = 339; //heading down the trench
 float currentHeading; // heading updated every loop
-float maxTurning = 0; //value associated with robot's maximum turning radius
-float maxTurningRadius = 0; //turning radius asscoaited with max turning input
+float maxTurning = 45; //value associated with robot's maximum turning radius
+float maxTurningRadius = 37; //turning radius asscoaited with max turning input
 float desTurnDistance = 0; // distance needed to be associated with end of open loop turn
 float rawHeading;
 float input;
@@ -41,8 +41,8 @@ int prevflow = 0;
 int startingPosition = 1; //front = 1; middle = 2; back = 3;
 bool leftOrRight = false; //left = false; right = true;
 
-float Kp = 1;
-float Kd = 1;
+float Kp = 0;
+float Kd = 0;
 float filterStrength = 0.9;
 
 
@@ -55,7 +55,7 @@ void setup() {
   myservo.attach(servoPin);               // attaches the servo on pin 9 to the servo object
   pinMode(solenoidPin, OUTPUT);           //Sets the pin as an output
   pinMode(switchPin, INPUT_PULLUP);       //Sets the pin as an input_pullup
-  Serial.begin(9600);                     // starts serial communication @ 9600 bps
+  Serial.begin(115200);                     // starts serial communication @ 9600 bps
   Wire.begin();
 
   if (!mag.init())
@@ -73,20 +73,19 @@ void setup() {
   imu.enableDefault();
 
 // actuate solenoid once
-
-digitalWrite(solenoidPin, HIGH);
+myservo.write(0.7 * (90 + 10));
+actuatePiston();
 
 startingParam(startingPosition);
 
 findDesiredTurningDistance();
-
+Serial.println("balls");
 
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-
-  actuatePiston();
+  //actuatePiston();
   //Call impulse data printing function
   getImpulse();
 
@@ -95,25 +94,23 @@ void loop() {
   rawHeading = computeHeading();
   currentHeading = averagingFilter(rawHeading, filterStrength);
 
-
-  startingParam(startingPosition);
-
 //tells the robot to go forward and once it has covered its starting position distance it will activate the initial turn
-  if (starting && dist >= distanceStartTurning) {
+  if ((starting) && (dist >= distanceStartTurning)) {
     turnReady = true;
     starting = false;
   }
 // tells robot to turn at max distance depending on if the current heading is less than or greater than the desired
   if (turnReady) {
     if (currentHeading < desiredHeading) {
-      myservo.write(maxTurning);
+      myservo.write(0.7 * (90 + maxTurning));
     }
     else {
-      myservo.write(-maxTurning);
+      myservo.write(0.7 * (90 - maxTurning));
     }
 // when the robot is close enough to desired heading it moves to the next section
     if(dist >= desTurnDistance) {
-      myservo.write(0);
+      Serial.println("fuck3");
+      myservo.write(0.7 * 90);
       turnReady = false;
       lookingDownTrench = true;
     }
@@ -123,13 +120,13 @@ void loop() {
   if(lookingDownTrench) {
     input = -Kp * (desiredHeading - currentHeading) + Kd * (desiredHeading - currentHeading) / (millis() - prevTime);
     if (input > -maxTurning && input < maxTurning) {
-      myservo.write(input);
+      myservo.write(0.7 * (90 + input));
     }
     else if (input > maxTurning) {
-      myservo.write(maxTurning);
+      myservo.write(0.7 * (90 + maxTurning));
     }
     else if (input < -maxTurning) {
-      myservo.write(-maxTurning);
+      myservo.write(0.7 * (90 - maxTurning));
     }
   }
 
@@ -139,7 +136,6 @@ void loop() {
 
  
 }
-
 
 
 
@@ -196,7 +192,7 @@ void actuatePiston() {
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
     if (solenoidState == LOW) {
-      //solenoidState = HIGH;
+      solenoidState = HIGH;
     } else {
       solenoidState = LOW;
     }
@@ -218,6 +214,7 @@ void getImpulse() {
     }
   }
   prevflow = flow; //resets the previous flow number to what it is now so that there are no repeats for the same switch flick
+  delay(10);
 }
 
 /*
@@ -226,13 +223,18 @@ Function to set the starting parameters based on position
 void startingParam(int startingPos) {
   switch(startingPos) {
     case 1:
-      distanceStartTurning = 0;
+      distanceStartTurning = 116;
+      Serial.println("startingParam done");
+      break;
     case 2:
-      distanceStartTurning = 0;
+      distanceStartTurning = 132;
+      break;
     case 3:
-      distanceStartTurning = 0;
+      distanceStartTurning = 164.5;
+      break;
     default:
       distanceStartTurning = 0;
+      break;
   }
 }
 
