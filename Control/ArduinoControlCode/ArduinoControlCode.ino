@@ -85,7 +85,7 @@ Serial.println("balls");
 
 void loop() {
   // put your main code here, to run repeatedly:
-  //actuatePiston();
+  actuatePiston();
   //Call impulse data printing function
   getImpulse();
 
@@ -101,7 +101,7 @@ void loop() {
   }
 // tells robot to turn at max distance depending on if the current heading is less than or greater than the desired
   if (turnReady) {
-    if (currentHeading < desiredHeading) {
+    if (leftOrRight) {
       myservo.write(0.7 * (90 + maxTurning));
     }
     else {
