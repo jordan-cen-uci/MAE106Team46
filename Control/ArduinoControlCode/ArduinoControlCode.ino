@@ -27,9 +27,9 @@ float distanceStartTurning = 0; //point at which robot is ready to start turning
 bool starting = true;
 bool turnReady = false; //bool to determine if the robot is in position to turn
 bool lookingDownTrench = false; //bool to determine if robot is looking in the correct direction
-float desiredHeading = 339; //heading down the trench
+float desiredHeading = 190; //heading down the trench
 float currentHeading; // heading updated every loop
-float maxTurning = 45; //value associated with robot's maximum turning radius
+float maxTurning = 50; //value associated with robot's maximum turning radius
 float maxTurningRadius = 37; //turning radius asscoaited with max turning input
 float desTurnDistance = 0; // distance needed to be associated with end of open loop turn
 float rawHeading;
@@ -38,11 +38,11 @@ float prevTime = 0;
 float filteredSignal_previous = 0; 
 int prevflow = 0;
 
-int startingPosition = 1; //front = 1; middle = 2; back = 3;
+int startingPosition = 0; //front = 1; middle = 2; back = 3;
 bool leftOrRight = false; //left = false; right = true;
 
-float Kp = 0;
-float Kd = 0;
+float Kp = 1;
+float Kd = 0.25;
 float filterStrength = 0.9;
 
 
@@ -57,7 +57,7 @@ void setup() {
   pinMode(switchPin, INPUT_PULLUP);       //Sets the pin as an input_pullup
   Serial.begin(115200);                     // starts serial communication @ 9600 bps
   Wire.begin();
-
+// setup for magnotometer
   if (!mag.init())
   {
     Serial.println("Failed to detect and initialize LIS3MDL magnetometer!");
@@ -73,44 +73,56 @@ void setup() {
   imu.enableDefault();
 
 // actuate solenoid once
-myservo.write(0.7 * (90 + 10));
+myservo.write(0.7 * (90));
 actuatePiston();
 
-startingParam(startingPosition);
+startingParam(startingPosition); //given position, will setup the initial distance before turning
 
-findDesiredTurningDistance();
-Serial.println("balls");
+findDesiredTurningDistance(); //function to calculate how much the counting wheel should turn before finsihing the turn; based on constants that may change through testing process
+Serial.println("Setup Complete");
 
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  //
   actuatePiston();
   //Call impulse data printing function
   getImpulse();
 
   mag.read(); //reads magnotometer
   imu.read();
-  rawHeading = computeHeading();
-  currentHeading = averagingFilter(rawHeading, filterStrength);
+  rawHeading = computeHeading(); //executes the template to computer heading from the magnotometer readings
+  currentHeading = averagingFilter(rawHeading, filterStrength); //calls filter to put heading data through a low pass filter to make up for external noise
 
 //tells the robot to go forward and once it has covered its starting position distance it will activate the initial turn
   if ((starting) && (dist >= distanceStartTurning)) {
     turnReady = true;
     starting = false;
   }
-// tells robot to turn at max distance depending on if the current heading is less than or greater than the desired
+// tells robot to turn at max distance depending on which side the robot starts on
   if (turnReady) {
+
     if (leftOrRight) {
-      myservo.write(0.7 * (90 + maxTurning));
+    //center position is located at calibrated 90 degrees;
+      myservo.write(0.7 * (90 + maxTurning)); //if on right side of field, turns hard right
     }
     else {
-      myservo.write(0.7 * (90 - maxTurning));
+      myservo.write(0.7 * (90 - maxTurning)); //if on left side of field, turns hard left
     }
-// when the robot is close enough to desired heading it moves to the next section
+// when the robot finishes a quarter of the arc of its turning radius it resets its steering to straight
     if(dist >= desTurnDistance) {
-      Serial.println("fuck3");
-      myservo.write(0.7 * 90);
+      Serial.println("Stopping Initial Turn");
+      if (leftOrRight) {
+      //to account for slack in linkages, servo to go straight is overcompensated for and then rewritten back to 90
+        myservo.write(0.7 * 80); //overcompensated reset from right to center
+        myservo.write(0.7 * 90); //reset to straight
+      }
+      else {
+        myservo.write(0.7 * 105); //overcompensated reset from left to center
+        myservo.write(0.7 * 90); //reset to straight
+      }
+
       turnReady = false;
       lookingDownTrench = true;
     }
@@ -118,9 +130,18 @@ void loop() {
 
 //closed loop control law to keep the robot straight while going down the trench
   if(lookingDownTrench) {
-    input = -Kp * (desiredHeading - currentHeading) + Kd * (desiredHeading - currentHeading) / (millis() - prevTime);
+    float error = desiredHeading - currentHeading;
+    //wrap function in case it crosses point of 0 or 360
+    if (error > 180) {
+      error = desiredHeading - (360 + currentHeading);
+    }
+    else if (error < -180) {
+      error = desiredHeading + (360 - currentHeading);
+    }
+
+    input = -Kp * (error) + (Kd * (error / (millis() - prevTime))); //control law for closed loop down the trench
     if (input > -maxTurning && input < maxTurning) {
-      myservo.write(0.7 * (90 + input));
+      myservo.write(0.7 * (90 - input));
     }
     else if (input > maxTurning) {
       myservo.write(0.7 * (90 + maxTurning));
@@ -214,7 +235,7 @@ void getImpulse() {
     }
   }
   prevflow = flow; //resets the previous flow number to what it is now so that there are no repeats for the same switch flick
-  delay(10);
+  //delay(10);
 }
 
 /*
@@ -254,9 +275,9 @@ Function to help find the desired distance the wheel must move in order to compl
 void findDesiredTurningDistance() {
   desTurnDistance = distanceStartTurning;
   if (leftOrRight) {
-    desTurnDistance = desTurnDistance + ((3.14/2)*sqrt(pow(betweenDistance, 2) + pow(maxTurningRadius + (frontDistance/2), 2)));
+    desTurnDistance = desTurnDistance + ((3.14/2)*sqrt(pow(betweenDistance, 2) + pow(maxTurningRadius - (frontDistance/2), 2)));
   }
   else {
-    desTurnDistance = desTurnDistance + ((3.14/2)*sqrt(pow(betweenDistance, 2) + pow(maxTurningRadius - (frontDistance/2), 2)));
+    desTurnDistance = desTurnDistance + ((3.14/2)*sqrt(pow(betweenDistance, 2) + pow(maxTurningRadius + (frontDistance/2), 2)));
   }
 }
