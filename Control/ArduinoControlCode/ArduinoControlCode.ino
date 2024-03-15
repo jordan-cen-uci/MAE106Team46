@@ -22,28 +22,29 @@ unsigned long previousMillis = 0;        // will store last time solenoid was up
 const long interval = 750;           // interval at which to turn solenoid on and off (milliseconds)
 LIS3MDL::vector<float> times;
 
-float dist = 0;
+float dist = 0; //distance variable to keep track of distance, updates for every getImpulse
 float distanceStartTurning = 0; //point at which robot is ready to start turning, determined based on position
-bool starting = false;
+bool starting = true; //bool to determine if robot is in the first stage
 bool turnReady = false; //bool to determine if the robot is in position to turn
-bool lookingDownTrench = true; //bool to determine if robot is looking in the correct direction
-float desiredHeading = 330; //heading down the trench
+bool lookingDownTrench = false; //bool to determine if robot is looking in the correct direction
+float desiredHeading = 340; //heading down the trench
 float currentHeading; // heading updated every loop
 float maxTurning = 45; //value associated with robot's maximum turning radius
 float maxTurningRadius = 13.75; //turning radius asscoaited with max turning input
 float desTurnDistance = 0; // distance needed to be associated with end of open loop turn
-float rawHeading;
-float input;
-float prevTime = 0;
+float rawHeading; //heading from magnotometer before being filtered
+float input; //cntrol law input into servo motor
+float prevTime = 0; //previous time tracker for derivative part of control law
 float filteredSignal_previous = 0; 
 int prevflow = 0;
 int count = 1;
+float error;
 
-int startingPosition = 0; //front = 1; middle = 2; back = 3;
-bool leftOrRight = true; //left = false; right = true;
+int startingPosition = 1; //front = 1; middle = 2; back = 3;
+bool leftOrRight = false; //left = false; right = true;
 
 float Kp = 3;
-float Kd = 0.5;
+float Kd = 2;
 float filterStrength = 0.95;
 
 
@@ -86,22 +87,50 @@ Serial.println("Setup Complete");
 
 void loop() {
   // put your main code here, to run repeatedly:
-  //
-  actuatePiston();
 
-  //Call impulse data printing function
-  getImpulse();
 
   mag.read(); //reads magnotometer
   imu.read();
   rawHeading = computeHeading(); //executes the template to computer heading from the magnotometer readings
+  actuatePiston();
+  //Call impulse data printing function
+  getImpulse();
+  //removes outlier from solenoid firing in order for magnotometer reading to be consistent; low pass filter not enough to attenuate this signal
+  //without delaying response of the robot by a lot
+  if (solenoidState == HIGH) {
+    rawHeading -= 10*sin(rawHeading * 3.14 / 180);
+    //when solenoid fired the max descrepancy occured at 90 and 270 degrees, and decreased as it got closer to 0 or 180, so I used sin to
+    //model the Y part of a circle where at 90 and 270 the offset would be its max and everywhere else it offsets based on the angle
+    //This only works when the solenoid is in a certain orientation though.
+  }
   currentHeading = averagingFilter(rawHeading, filterStrength); //calls filter to put heading data through a low pass filter to make up for external noise
   Serial.println(currentHeading);
 
 //tells the robot to go forward and once it has covered its starting position distance it will activate the initial turn
-  if ((starting) && (dist >= distanceStartTurning)) {
-    turnReady = true;
-    starting = false;
+  if (starting) {
+    error = desHeadingBefore90Turn(desiredHeading) - currentHeading;
+    //wrap function in case it crosses point of 0 or 360
+    if (error > 180) {
+      error = desHeadingBefore90Turn(desiredHeading) - (360 + currentHeading);
+    }
+    else if (error < -180) {
+      error = desHeadingBefore90Turn(desiredHeading) + (360 - currentHeading);
+    }
+
+    input = -Kp * (error) + (Kd * (error / (millis() - prevTime))); //control law for closed loop down the trench
+    if (input > -maxTurning && input < maxTurning) {
+      myservo.write(0.7 * (90 - input));
+    }
+    else if (input > maxTurning) {
+      myservo.write(0.7 * (90 - maxTurning));
+    }
+    else if (input < -maxTurning) {
+      myservo.write(0.7 * (90 + maxTurning));
+    }
+    if (dist >= distanceStartTurning) {
+      turnReady = true;
+      starting = false;
+    }
   }
 // tells robot to turn at max distance depending on which side the robot starts on
   if (turnReady) {
@@ -126,14 +155,14 @@ void loop() {
         myservo.write(0.7 * 90); //reset to straight
       }
 
-      turnReady = false;
-      lookingDownTrench = true;
+      turnReady = false; //ends second phase
+      lookingDownTrench = true; //begins third phase; closed loop down trench
     }
   }
 
 //closed loop control law to keep the robot straight while going down the trench
   if(lookingDownTrench) {
-    float error = desiredHeading - currentHeading;
+    error = desiredHeading - currentHeading;
     //wrap function in case it crosses point of 0 or 360
     if (error > 180) {
       error = desiredHeading - (360 + currentHeading);
@@ -168,7 +197,6 @@ void loop() {
 template <typename T> float computeHeading(LIS3MDL::vector<T> from)
 {
   LIS3MDL::vector<int32_t> temp_m = {mag.m.x, mag.m.y, mag.m.z}; //creates vector for magnotometer readings
-
   // copy acceleration readings from LSM6::vector into an LIS3MDL::vector
   LIS3MDL::vector<int16_t> a = {imu.a.x, imu.a.y, imu.a.z};
 
@@ -283,4 +311,22 @@ void findDesiredTurningDistance() {
   else {
     desTurnDistance = desTurnDistance + ((3.14/2)*sqrt(pow(betweenDistance, 2) + pow(maxTurningRadius + (frontDistance/2), 2)));
   }
+}
+
+float desHeadingBefore90Turn(float endHeading) {
+  float desHeadingBeforeTurn;
+  if (leftOrRight) {
+    desHeadingBeforeTurn = endHeading - 90;
+  }
+  else {
+    desHeadingBeforeTurn = endHeading + 90;
+  }
+
+  if (desHeadingBeforeTurn > 360) {
+    desHeadingBeforeTurn -= 360;
+  }
+  else if (desHeadingBeforeTurn < 0) {
+    desHeadingBeforeTurn += 360;
+  }
+  return desHeadingBeforeTurn;
 }
