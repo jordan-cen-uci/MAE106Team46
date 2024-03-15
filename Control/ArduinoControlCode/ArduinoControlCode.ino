@@ -20,7 +20,6 @@ int servoDir = 0;       // variable that stores the direction the motor is turni
 int solenoidState = LOW;  // variable that stores if solenoid is on or off         
 unsigned long previousMillis = 0;        // will store last time solenoid was updated
 const long interval = 750;           // interval at which to turn solenoid on and off (milliseconds)
-LIS3MDL::vector<float> times;
 
 float dist = 0; //distance variable to keep track of distance, updates for every getImpulse
 float distanceStartTurning = 0; //point at which robot is ready to start turning, determined based on position
@@ -35,22 +34,24 @@ float desTurnDistance = 0; // distance needed to be associated with end of open 
 float rawHeading; //heading from magnotometer before being filtered
 float input; //cntrol law input into servo motor
 float prevTime = 0; //previous time tracker for derivative part of control law
-float filteredSignal_previous = 0; 
-int prevflow = 0;
-int count = 1;
-float error;
+float filteredSignal_previous = 0; //tracks previous filtered signal for low pass filter
+int prevflow = 0; //tracks the flow of the limit switch in order to see if it has or hasn't been pressed already
+float error; //error of the heading
 
+/////////VARIABLES FOR STARTING CONDIDTIONS////////////////
+///////////// CHANGE BEFORE DRIVING////////////////////////
 int startingPosition = 1; //front = 1; middle = 2; back = 3;
 bool leftOrRight = false; //left = false; right = true;
 
-float Kp = 3;
-float Kd = 2;
-float filterStrength = 0.95;
+/////////VARIABLES FOR CHANGING CLOSED LOOP RESPONSE////////////////
+float Kp = 3; //proprotional gain
+float Kd = 2; //derivaitve gain
+float filterStrength = 0.95; //low pass filter strength
 
-
-float frontDistance = 7.875;
-float backDistance = 5.375;
-float betweenDistance  = 7;
+/////////VARIABLES FOR PHYSICAL PARAMETERS////////////////
+float frontDistance = 7.875; //distance between front wheels
+float backDistance = 5.375; //distance between back wheels
+float betweenDistance  = 7; //distance between front and back axles
 
 
 void setup() {
@@ -74,13 +75,13 @@ void setup() {
   }
   imu.enableDefault();
 
-// actuate solenoid once
-myservo.write(0.7 * (90));
-actuatePiston();
 
-startingParam(startingPosition); //given position, will setup the initial distance before turning
+myservo.write(0.7 * (90)); //sets wheels straight if not already
+
+startingParam(startingPosition); //given starting position, will setup the initial distance before turning
 
 findDesiredTurningDistance(); //function to calculate how much the counting wheel should turn before finsihing the turn; based on constants that may change through testing process
+
 Serial.println("Setup Complete");
 
 }
@@ -90,11 +91,11 @@ void loop() {
 
 
   mag.read(); //reads magnotometer
-  imu.read();
-  rawHeading = computeHeading(); //executes the template to computer heading from the magnotometer readings
-  actuatePiston();
-  //Call impulse data printing function
-  getImpulse();
+  imu.read(); //reads accelerotmeter
+  rawHeading = computeHeading(); //executes the template to compute heading from the magnotometer readings
+  actuatePiston(); //actuates piston at certain intervals
+  getImpulse();  //Call impulse data printing function
+
   //removes outlier from solenoid firing in order for magnotometer reading to be consistent; low pass filter not enough to attenuate this signal
   //without delaying response of the robot by a lot
   if (solenoidState == HIGH) {
@@ -103,10 +104,12 @@ void loop() {
     //model the Y part of a circle where at 90 and 270 the offset would be its max and everywhere else it offsets based on the angle
     //This only works when the solenoid is in a certain orientation though.
   }
+
   currentHeading = averagingFilter(rawHeading, filterStrength); //calls filter to put heading data through a low pass filter to make up for external noise
+
   Serial.println(currentHeading);
 
-//tells the robot to go forward and once it has covered its starting position distance it will activate the initial turn
+//tells the robot to go forward in closed loop and once it has covered its starting position distance it will activate the initial turn
   if (starting) {
     error = desHeadingBefore90Turn(desiredHeading) - currentHeading;
     //wrap function in case it crosses point of 0 or 360
@@ -118,6 +121,7 @@ void loop() {
     }
 
     input = -Kp * (error) + (Kd * (error / (millis() - prevTime))); //control law for closed loop down the trench
+    //attenuates the signal if it gets bigger than its maximum turning radius on either end of the extreme
     if (input > -maxTurning && input < maxTurning) {
       myservo.write(0.7 * (90 - input));
     }
@@ -127,11 +131,13 @@ void loop() {
     else if (input < -maxTurning) {
       myservo.write(0.7 * (90 + maxTurning));
     }
+    //once starting distance covered, move from closed loop to open loop 90 degree steering
     if (dist >= distanceStartTurning) {
       turnReady = true;
       starting = false;
     }
   }
+
 // tells robot to turn at max distance depending on which side the robot starts on
   if (turnReady) {
 
@@ -172,6 +178,7 @@ void loop() {
     }
 
     input = -Kp * (error) + (Kd * (error / (millis() - prevTime))); //control law for closed loop down the trench
+    //attenuates the signal if it gets bigger than its maximum turning radius on either end of the extreme
     if (input > -maxTurning && input < maxTurning) {
       myservo.write(0.7 * (90 - input));
     }
@@ -182,12 +189,7 @@ void loop() {
       myservo.write(0.7 * (90 + maxTurning));
     }
   }
-
-
-
-  prevTime = millis();
-
- 
+  prevTime = millis(); //tracks previous time for derivative part of control law
 }
 
 
@@ -233,11 +235,7 @@ float computeHeading()
 
 
 /*
-function to actuate the piston for one cycle
-  activate piston
-  delay for 200 ms
-  retract piston
-  delay for 500 ms
+function to actuate the piston for one cycle given a certain time interval
 */
 void actuatePiston() {
   unsigned long currentMillis = millis();
@@ -276,7 +274,6 @@ void startingParam(int startingPos) {
   switch(startingPos) {
     case 1:
       distanceStartTurning = 116;
-      Serial.println("startingParam done");
       break;
     case 2:
       distanceStartTurning = 132;
@@ -288,10 +285,11 @@ void startingParam(int startingPos) {
       distanceStartTurning = 0;
       break;
   }
+  Serial.println("Starting Parameters Done");
 }
 
 /*
-Function to filter the measured signal
+Function to filter the measured signal through a digital low pass filter
 */
 float averagingFilter(float measuredSignal, float filterStrength){   
   float filterOutput = (1-filterStrength)*measuredSignal + 
@@ -302,6 +300,8 @@ float averagingFilter(float measuredSignal, float filterStrength){
 
 /*
 Function to help find the desired distance the wheel must move in order to complete the 90 degree turn into the trench.
+Because front wheels will not travel the same arc, it is important to know exactly when to stop turning
+Uses physical parameter values, trig, and pythaogorean theorem to find the necessary arc length needed to be traversed by the counting wheel
 */
 void findDesiredTurningDistance() {
   desTurnDistance = distanceStartTurning;
@@ -313,15 +313,19 @@ void findDesiredTurningDistance() {
   }
 }
 
+/*
+Finds desired heading before the open loop 90 degree turn
+*/
 float desHeadingBefore90Turn(float endHeading) {
   float desHeadingBeforeTurn;
+  //depending on which side of the field the bot is on, the heading will increase or decrease by 90
   if (leftOrRight) {
     desHeadingBeforeTurn = endHeading - 90;
   }
   else {
     desHeadingBeforeTurn = endHeading + 90;
   }
-
+  //helps to catch if there is any unnecessary wrapping since this is just a constant
   if (desHeadingBeforeTurn > 360) {
     desHeadingBeforeTurn -= 360;
   }
