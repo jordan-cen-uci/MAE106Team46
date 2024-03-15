@@ -6,8 +6,8 @@
 LIS3MDL mag;
 LSM6 imu;
 
-LIS3MDL::vector<int16_t> m_min = { -6366,	-2594,	1633};
-LIS3MDL::vector<int16_t> m_max = {-2597,	762,	2086};
+LIS3MDL::vector<int16_t> m_min = {-4929,	-1724,	1425};
+LIS3MDL::vector<int16_t> m_max = {-2182,	651,	1822};
 
 Servo myservo;
 
@@ -19,31 +19,32 @@ int switchState;        // variable that stores the Reed switch state
 int servoDir = 0;       // variable that stores the direction the motor is turning in the demo program
 int solenoidState = LOW;  // variable that stores if solenoid is on or off         
 unsigned long previousMillis = 0;        // will store last time solenoid was updated
-const long interval = 1000;           // interval at which to turn solenoid on and off (milliseconds)
+const long interval = 750;           // interval at which to turn solenoid on and off (milliseconds)
 LIS3MDL::vector<float> times;
 
 float dist = 0;
 float distanceStartTurning = 0; //point at which robot is ready to start turning, determined based on position
-bool starting = true;
+bool starting = false;
 bool turnReady = false; //bool to determine if the robot is in position to turn
-bool lookingDownTrench = false; //bool to determine if robot is looking in the correct direction
-float desiredHeading = 190; //heading down the trench
+bool lookingDownTrench = true; //bool to determine if robot is looking in the correct direction
+float desiredHeading = 330; //heading down the trench
 float currentHeading; // heading updated every loop
-float maxTurning = 50; //value associated with robot's maximum turning radius
-float maxTurningRadius = 37; //turning radius asscoaited with max turning input
+float maxTurning = 45; //value associated with robot's maximum turning radius
+float maxTurningRadius = 13.75; //turning radius asscoaited with max turning input
 float desTurnDistance = 0; // distance needed to be associated with end of open loop turn
 float rawHeading;
 float input;
 float prevTime = 0;
 float filteredSignal_previous = 0; 
 int prevflow = 0;
+int count = 1;
 
 int startingPosition = 0; //front = 1; middle = 2; back = 3;
-bool leftOrRight = false; //left = false; right = true;
+bool leftOrRight = true; //left = false; right = true;
 
-float Kp = 1;
-float Kd = 0.25;
-float filterStrength = 0.9;
+float Kp = 3;
+float Kd = 0.5;
+float filterStrength = 0.95;
 
 
 float frontDistance = 7.875;
@@ -87,6 +88,7 @@ void loop() {
   // put your main code here, to run repeatedly:
   //
   actuatePiston();
+
   //Call impulse data printing function
   getImpulse();
 
@@ -94,6 +96,7 @@ void loop() {
   imu.read();
   rawHeading = computeHeading(); //executes the template to computer heading from the magnotometer readings
   currentHeading = averagingFilter(rawHeading, filterStrength); //calls filter to put heading data through a low pass filter to make up for external noise
+  Serial.println(currentHeading);
 
 //tells the robot to go forward and once it has covered its starting position distance it will activate the initial turn
   if ((starting) && (dist >= distanceStartTurning)) {
@@ -144,10 +147,10 @@ void loop() {
       myservo.write(0.7 * (90 - input));
     }
     else if (input > maxTurning) {
-      myservo.write(0.7 * (90 + maxTurning));
+      myservo.write(0.7 * (90 - maxTurning));
     }
     else if (input < -maxTurning) {
-      myservo.write(0.7 * (90 - maxTurning));
+      myservo.write(0.7 * (90 + maxTurning));
     }
   }
 
