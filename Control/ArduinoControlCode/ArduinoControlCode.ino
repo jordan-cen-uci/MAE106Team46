@@ -98,16 +98,34 @@ void loop() {
 
   //removes outlier from solenoid firing in order for magnotometer reading to be consistent; low pass filter not enough to attenuate this signal
   //without delaying response of the robot by a lot
+  
   if (solenoidState == HIGH) {
     rawHeading -= 10*sin(rawHeading * 3.14 / 180);
+    //rawHeading += 10*cos(rawHeading * 3.14 / 180);
+    if (rawHeading > 360) {
+      rawHeading -= 360;
+    }
+    else if(rawHeading < 0) {
+      rawHeading += 360;
+    }
     //when solenoid fired the max descrepancy occured at 90 and 270 degrees, and decreased as it got closer to 0 or 180, so I used sin to
     //model the Y part of a circle where at 90 and 270 the offset would be its max and everywhere else it offsets based on the angle
     //This only works when the solenoid is in a certain orientation though.
   }
+<<<<<<< Updated upstream
 
   currentHeading = averagingFilter(rawHeading, filterStrength); //calls filter to put heading data through a low pass filter to make up for external noise
 
   Serial.println(currentHeading);
+=======
+  
+  if (rawHeading <= 358 && rawHeading >= 2) {
+    currentHeading = averagingFilter(rawHeading, filterStrength); //calls filter to put heading data through a low pass filter to make up for external noise
+  }
+  else {
+    currentHeading = rawHeading;
+  }
+>>>>>>> Stashed changes
 
 //tells the robot to go forward in closed loop and once it has covered its starting position distance it will activate the initial turn
   if (starting) {
@@ -115,9 +133,11 @@ void loop() {
     //wrap function in case it crosses point of 0 or 360
     if (error > 180) {
       error = desHeadingBefore90Turn(desiredHeading) - (360 + currentHeading);
+      error = -(desHeadingBefore90Turn(desiredHeading) - (360 + currentHeading));
     }
     else if (error < -180) {
       error = desHeadingBefore90Turn(desiredHeading) + (360 - currentHeading);
+      error = -(desHeadingBefore90Turn(desiredHeading) + (360 - currentHeading));
     }
 
     input = -Kp * (error) + (Kd * (error / (millis() - prevTime))); //control law for closed loop down the trench
@@ -181,6 +201,7 @@ void loop() {
     //attenuates the signal if it gets bigger than its maximum turning radius on either end of the extreme
     if (input > -maxTurning && input < maxTurning) {
       myservo.write(0.7 * (90 - input));
+      myservo.write(0.7 * (90 + input));
     }
     else if (input > maxTurning) {
       myservo.write(0.7 * (90 - maxTurning));
