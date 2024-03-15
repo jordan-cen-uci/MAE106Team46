@@ -27,6 +27,7 @@ bool starting = true; //bool to determine if robot is in the first stage
 bool turnReady = false; //bool to determine if the robot is in position to turn
 bool lookingDownTrench = false; //bool to determine if robot is looking in the correct direction
 float desiredHeading = 340; //heading down the trench
+float desiredHeading = 330; //heading down the trench
 float currentHeading; // heading updated every loop
 float maxTurning = 45; //value associated with robot's maximum turning radius
 float maxTurningRadius = 13.75; //turning radius asscoaited with max turning input
@@ -42,11 +43,16 @@ float error; //error of the heading
 ///////////// CHANGE BEFORE DRIVING////////////////////////
 int startingPosition = 1; //front = 1; middle = 2; back = 3;
 bool leftOrRight = false; //left = false; right = true;
+bool leftOrRight = true; //left = false; right = true;
 
 /////////VARIABLES FOR CHANGING CLOSED LOOP RESPONSE////////////////
 float Kp = 3; //proprotional gain
 float Kd = 2; //derivaitve gain
 float filterStrength = 0.95; //low pass filter strength
+=======
+float Kp = 1;
+float filterStrength = 0.98;
+>>>>>>> Stashed changes
 
 /////////VARIABLES FOR PHYSICAL PARAMETERS////////////////
 float frontDistance = 7.875; //distance between front wheels
@@ -59,6 +65,7 @@ void setup() {
   pinMode(solenoidPin, OUTPUT);           //Sets the pin as an output
   pinMode(switchPin, INPUT_PULLUP);       //Sets the pin as an input_pullup
   Serial.begin(115200);                     // starts serial communication @ 9600 bps
+  Serial.begin(9600);                     // starts serial communication @ 9600 bps
   Wire.begin();
 // setup for magnotometer
   if (!mag.init())
