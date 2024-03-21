@@ -11,6 +11,7 @@ function sim = update_position_estimation(sim, magnetometer, reed_switch)
     magnetometer_weight         = sim.vars.magnetometer_weight;
     b                           = sim.robot.b;
     delta_s                     = sim.robot.delta_s_w;
+    time_reed_switch_array      = sim.vars.time_reed_switch_array;
     
     %% Main logic
     % update estimator whenever reed switch activates
@@ -18,6 +19,7 @@ function sim = update_position_estimation(sim, magnetometer, reed_switch)
         % calculate avereage speed since last update
         speed_estimate = delta_s_w/(time_now-time_reed_switch);
         time_reed_switch = time_now;
+        time_reed_switch_array = [time_reed_switch_array; time_reed_switch];
         robot_direction_estimate_last = robot_direction_estimate;
                
         % model steering kinematics
@@ -46,6 +48,7 @@ function sim = update_position_estimation(sim, magnetometer, reed_switch)
     sim.vars.position_estimate          = position_estimate;
     sim.vars.robot_direction_estimate   = robot_direction_estimate;
     sim.vars.speed_estimate             = speed_estimate;
-    sim.vars.time_reed_switch           = time_reed_switch;  
+    sim.vars.time_reed_switch           = time_reed_switch;
+    sim.vars.time_reed_switch_array     = time_reed_switch_array;
 end
     

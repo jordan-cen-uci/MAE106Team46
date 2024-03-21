@@ -1,7 +1,7 @@
 function params = load_simulation_parameters()
     % This function loads the parameters for your simulation. 
     params.sampling_frequency = 100; % Frequency in which the simulation is running (in hertz)
-    params.total_time = 60; % For how long to run the simulation (in seconds)
+    params.total_time = 16; % For how long to run the simulation (in seconds)
     
     % Animation parameters
     params.view_style = 1; % [SELECT] 1 = course view, 2 = robot view

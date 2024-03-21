@@ -23,10 +23,9 @@ const long interval = 750;           // interval at which to turn solenoid on an
 
 float dist = 0; //distance variable to keep track of distance, updates for every getImpulse
 float distanceStartTurning = 0; //point at which robot is ready to start turning, determined based on position
-bool starting = true; //bool to determine if robot is in the first stage
+bool starting = false; //bool to determine if robot is in the first stage
 bool turnReady = false; //bool to determine if the robot is in position to turn
-bool lookingDownTrench = false; //bool to determine if robot is looking in the correct direction
-float desiredHeading = 340; //heading down the trench
+bool lookingDownTrench = true; //bool to determine if robot is looking in the correct direction
 float desiredHeading = 330; //heading down the trench
 float currentHeading; // heading updated every loop
 float maxTurning = 45; //value associated with robot's maximum turning radius
@@ -43,16 +42,11 @@ float error; //error of the heading
 ///////////// CHANGE BEFORE DRIVING////////////////////////
 int startingPosition = 1; //front = 1; middle = 2; back = 3;
 bool leftOrRight = false; //left = false; right = true;
-bool leftOrRight = true; //left = false; right = true;
 
 /////////VARIABLES FOR CHANGING CLOSED LOOP RESPONSE////////////////
 float Kp = 3; //proprotional gain
 float Kd = 2; //derivaitve gain
 float filterStrength = 0.95; //low pass filter strength
-=======
-float Kp = 1;
-float filterStrength = 0.98;
->>>>>>> Stashed changes
 
 /////////VARIABLES FOR PHYSICAL PARAMETERS////////////////
 float frontDistance = 7.875; //distance between front wheels
@@ -119,12 +113,10 @@ void loop() {
     //model the Y part of a circle where at 90 and 270 the offset would be its max and everywhere else it offsets based on the angle
     //This only works when the solenoid is in a certain orientation though.
   }
-<<<<<<< Updated upstream
 
   currentHeading = averagingFilter(rawHeading, filterStrength); //calls filter to put heading data through a low pass filter to make up for external noise
 
-  Serial.println(currentHeading);
-=======
+  //Serial.println(currentHeading);
   
   if (rawHeading <= 358 && rawHeading >= 2) {
     currentHeading = averagingFilter(rawHeading, filterStrength); //calls filter to put heading data through a low pass filter to make up for external noise
@@ -132,18 +124,15 @@ void loop() {
   else {
     currentHeading = rawHeading;
   }
->>>>>>> Stashed changes
 
 //tells the robot to go forward in closed loop and once it has covered its starting position distance it will activate the initial turn
   if (starting) {
     error = desHeadingBefore90Turn(desiredHeading) - currentHeading;
     //wrap function in case it crosses point of 0 or 360
     if (error > 180) {
-      error = desHeadingBefore90Turn(desiredHeading) - (360 + currentHeading);
       error = -(desHeadingBefore90Turn(desiredHeading) - (360 + currentHeading));
     }
     else if (error < -180) {
-      error = desHeadingBefore90Turn(desiredHeading) + (360 - currentHeading);
       error = -(desHeadingBefore90Turn(desiredHeading) + (360 - currentHeading));
     }
 
@@ -208,7 +197,6 @@ void loop() {
     //attenuates the signal if it gets bigger than its maximum turning radius on either end of the extreme
     if (input > -maxTurning && input < maxTurning) {
       myservo.write(0.7 * (90 - input));
-      myservo.write(0.7 * (90 + input));
     }
     else if (input > maxTurning) {
       myservo.write(0.7 * (90 - maxTurning));
@@ -321,7 +309,7 @@ Function to filter the measured signal through a digital low pass filter
 */
 float averagingFilter(float measuredSignal, float filterStrength){   
   float filterOutput = (1-filterStrength)*measuredSignal + 
-    filterStrength*filteredSignal_previous;    
+  filterStrength*filteredSignal_previous;    
   filteredSignal_previous = filterOutput;   
   return filterOutput; 
 }

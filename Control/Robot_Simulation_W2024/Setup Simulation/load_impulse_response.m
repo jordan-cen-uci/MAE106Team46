@@ -3,8 +3,7 @@ function impulse_response = load_impulse_response(robot, simulation)
     % [EXPERIMENT] Enter your data into impulse_response.data, each row is for one trial, add NaN as necessary to make rectangular matrix
     % Each of the points in the impulse_response.data is the time of a tick
     % on your encoder.
-    impulse_response.data = [.15 .25 .40 .9  1.4  2.8 NaN; ...
-                             .14 .26 .41 .67 1.42 2.9 5.1];
+    impulse_response.data = [0.101 0.194 0.288 0.38 0.448 0.508 0.6 0.71 0.82 0.955 1.065 1.192 1.344 1.48 1.681];
                                 
     impulse_response.scale = 1; % [EXPERIMENT] use to calibrate your max speed
     impulse_response.decay = @(n) max(0,polyval([-.00025 -.0038 1.0103],n)); % [EXPERIMENT] This equates how much less movement your robot gets with each actuation of the piston. This happens due to the reduced pressure in the tire.

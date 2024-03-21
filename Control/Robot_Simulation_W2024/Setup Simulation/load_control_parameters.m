@@ -5,8 +5,8 @@ function control_variables = load_control_parameters()
     % Keep track of piston state, time it was last changed and for how long
     % the piston should be be on and off
 
-    control_variables.piston_time_on = 0.2; % (seconds) [SELECT] Period the piston is on
-    control_variables.piston_time_off = 0.5; % (seconds) [SELECT] Period the piston is off
+    control_variables.piston_time_on = 0.8; % (seconds) [SELECT] Period the piston is on
+    control_variables.piston_time_off = 0.8; % (seconds) [SELECT] Period the piston is off
     control_variables.piston_state = 0; % current piston state
     control_variables.piston_time_changed = -Inf; % last time we changed the piston state
     
@@ -14,6 +14,7 @@ function control_variables = load_control_parameters()
     control_variables.time_reed_switch = 0; % time reed switch has turned on
     control_variables.time_reed_switch_last = 0; % last time reed switch had turned on
     control_variables.reed_switch_last = 1; % reed switch state in the last iteration
+    control_variables.time_reed_switch_array = [];
     
     % Info about the course
     control_variables.grid_size = 66; % (inches) side length of sidewalk square grid

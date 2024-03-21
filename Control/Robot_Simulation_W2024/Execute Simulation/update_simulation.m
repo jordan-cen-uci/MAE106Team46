@@ -1,7 +1,6 @@
 function sim = update_simulation(sim)
 % simulation step
 n = sim.n;
-
 % get variables into our main struct for future reference and plot
 
 % simulation parameters
